@@ -2,9 +2,7 @@
 
 ### Description
 
-This scenario creates two `virtualbox` instances.
+This scenario creates a `virtualbox` instance. The "Coming Soon!" website is
+built and published, which can be found at:
 
-The scenario has a side-effect play that does the followings:
-
-* Creates two digests from the time
-* Creates two files with the digests under `/tmp`
+http://192.168.21.200/

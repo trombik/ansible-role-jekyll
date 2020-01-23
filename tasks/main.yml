@@ -49,6 +49,7 @@
     # XXX should be configurable
     deployment_mode: no
     executable: "{{ jekyll_bundler_bin }}"
+    user_install: yes
     state: present
   with_items: "{{ jekyll_repositories }}"
   become: yes

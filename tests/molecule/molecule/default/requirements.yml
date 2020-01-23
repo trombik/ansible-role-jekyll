@@ -1,2 +1,6 @@
 ---
-[]
+- name: trombik.bundler
+- name: trombik.git
+- name: trombik.redhat_repo
+- name: trombik.nginx
+- name: trombik.sudo
