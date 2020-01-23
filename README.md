@@ -1,12 +1,12 @@
-# `trombik.template_role`
+# `trombik.jekyll`
 
-[![Build Status](https://travis-ci.com/trombik/trombik.template_role.svg?branch=master)](https://travis-ci.com/trombik/trombik.template_role)
+[![Build Status](https://travis-ci.com/trombik/trombik.jekyll.svg?branch=master)](https://travis-ci.com/trombik/trombik.jekyll)
 
-`ansible` role for `template_role`.
+`ansible` role to manage `jekyll` sites. This role does:
 
-This is a template role to develop new `ansible` role. Not to be used as
-`ansible` role. Please see [README.about.md](README.about.md) for more
-details.
+* checkout or update repositories
+* install required gems using `bundler`
+* rebuild sites
 
 # Requirements
 
@@ -14,65 +14,54 @@ details.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `template_role_package` | Package name of `template_role` | `{{ __template_role_package }}` |
-| `template_role_service` | Service name of `template_role` | `{{ __template_role_service }}` |
-| `template_role_extra_packages` | A list of extra package to install | `[]` |
-| `template_role_user` | User name of `template_role` | `{{ __template_role_user }}` |
-| `template_role_group` | Group name of `template_role` | `{{ __template_role_group }}` |
-| `template_role_extra_groups` | A list of extra groups for `template_role_user` | `[]` |
-| `template_role_log_dir` | Path to log directory | `/var/log/template_role` |
-| `template_role_config_dir` | Path to the configuration directory | `{{ __template_role_config_dir }}` |
-| `template_role_config_file` | Path to `template_role.conf` | `{{ template_role_config_dir }}/sshd_config` |
-| `template_role_config` | The content of `template_role.conf` | `""` |
-| `template_role_flags` | See below | `""` |
+| `jekyll_user` | User name of `jekyll` site owner | `""` |
+| `jekyll_repositories` | See below | `[]` |
+| `jekyll_extra_packages` | List of extra packages to install | `[]` |
+| `jekyll_bundler_bin` | `bundler` command to run | `{{ __jekyll_bundler_bin }}` |
 
-## `template_role_flags`
+## `jekyll_repositories`
 
-This variable is used for overriding defaults for startup scripts. In Debian
-variants, the value is the content of `/etc/default/template_role`. In RedHat
-variants, it is the content of `/etc/sysconfig/template_role`. In FreeBSD, it
-is the content of `/etc/rc.conf.d/template_role`. In OpenBSD, the value is
-passed to `rcctl set template_role`.
+This is a list of dict. Each element of the list describes a site.
+
+| Key | Description | Mandatory? |
+|-----|-------------|------------|
+| `name` | Name of the site | No |
+| `module` | `ansible` module name to checkout the site (currently, only `git` is supported) | Yes |
+| `config` | Passed to  the `ansible` module | Yes |
+
+```
+jekyll_repositories:
+  - name: demo
+    module: git
+    config:
+      repo: https://github.com/trombik/startbootstrap-coming-soon.git
+      dest: /home/vagrant/demo
+      version: "{{ os_branch[ansible_os_family] }}"
+```
 
 ## Debian
 
 | Variable | Default |
 |----------|---------|
-| `__template_role_service` | `ssh` |
-| `__template_role_package` | `openssh-server` |
-| `__template_role_config_dir` | `/etc/ssh` |
-| `__template_role_user` | `sshd` |
-| `__template_role_group` | `nogroup` |
+| `__jekyll_bundler_bin` | `bundle` |
 
 ## FreeBSD
 
 | Variable | Default |
 |----------|---------|
-| `__template_role_service` | `openssh` |
-| `__template_role_package` | `security/openssh-portable` |
-| `__template_role_config_dir` | `/usr/local/etc/ssh` |
-| `__template_role_user` | `sshd` |
-| `__template_role_group` | `sshd` |
+| `__jekyll_bundler_bin` | `bundle` |
 
 ## OpenBSD
 
 | Variable | Default |
 |----------|---------|
-| `__template_role_service` | `sshd` |
-| `__template_role_package` | `""` |
-| `__template_role_config_dir` | `/etc/ssh` |
-| `__template_role_user` | `sshd` |
-| `__template_role_group` | `sshd` |
+| `__jekyll_bundler_bin` | `bundle25` |
 
 ## RedHat
 
 | Variable | Default |
 |----------|---------|
-| `__template_role_service` | `sshd` |
-| `__template_role_package` | `openssh-server` |
-| `__template_role_config_dir` | `/etc/ssh` |
-| `__template_role_user` | `sshd` |
-| `__template_role_group` | `sshd` |
+| `__jekyll_bundler_bin` | `bundle` |
 
 # Dependencies
 
@@ -82,7 +71,12 @@ passed to `rcctl set template_role`.
 ---
 - hosts: localhost
   roles:
-    - trombik.template_role
+    - role: trombik.git
+    - role: trombik.language_ruby
+    - role: trombik.bundler
+    - role: trombik.redhat_repo
+      when: ansible_os_family == 'RedHat'
+    - role: ansible-role-jekyll
   pre_tasks:
     - name: Dump all hostvars
       debug:
@@ -103,33 +97,50 @@ passed to `rcctl set template_role`.
       when:
         - ansible_os_family == 'FreeBSD'
   vars:
-    os_template_role_flags:
-      OpenBSD: -4
-      FreeBSD: ""
-      Debian: ""
-      RedHat: ""
+    os_branch:
+      FreeBSD: demo
+      OpenBSD: demo_bundler_1_2
+      Debian: demo_bundler_1_2
+      RedHat: demo_bundler_1_2
 
-    # on RedHat, non-default port is not allowed to listen on
-    # on FreeBSD, sshd from the base and one from the package are both running
-    os_ports:
-      OpenBSD: [22, 10022]
-      FreeBSD: [10022]
-      Debian: [22, 10022]
-      RedHat: [22]
-    template_role_flags: "{{ os_template_role_flags[ansible_os_family] }}"
-    template_role_extra_groups:
-      - bin
-    template_role_config: |
-      UseDNS no
-      {% for p in os_ports[ansible_os_family] %}
-      Port {{ p }}
-      {% endfor %}
+    os_jekyll_extra_packages:
+      FreeBSD: []
+      OpenBSD: []
+      Debian:
+        - ruby-dev
+      RedHat:
+        - gcc-c++
+        - ruby-devel
+    jekyll_extra_packages: "{{ os_jekyll_extra_packages[ansible_os_family] }}"
+
+    jekyll_user: vagrant
+    os_jekyll_bundler_bin:
+      OpenBSD: "bundle{{ language_ruby_version.short }}"
+      Debian: "{{ __jekyll_bundler_bin }}"
+      FreeBSD: "{{ __jekyll_bundler_bin }}"
+      RedHat: "{{ __jekyll_bundler_bin }}"
+    jekyll_bundler_bin: "{{ os_jekyll_bundler_bin[ansible_os_family] }}"
+    jekyll_repositories:
+      - name: demo
+        module: git
+        config:
+          repo: https://github.com/trombik/startbootstrap-coming-soon.git
+          dest: /home/vagrant/demo
+          version: "{{ os_branch[ansible_os_family] }}"
+
+    redhat_repo_extra_packages:
+      - epel-release
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
 ```
 
 # License
 
 ```
-Copyright (c) 2016 Tomoyuki Sakurai <y@trombik.org>
+Copyright (c) 2020 Tomoyuki Sakurai <y@trombik.org>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
