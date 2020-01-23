@@ -2,7 +2,7 @@ require "spec_helper"
 require "serverspec"
 
 repos = [
-  { :path => "/home/vagrant/demo", :branch => "demo" }
+  { path: "/home/vagrant/demo", branch: "demo" }
 ]
 user = "vagrant"
 bundle_bin = "bundle"
