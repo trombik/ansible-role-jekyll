@@ -30,26 +30,93 @@
     - role: docker
       when:
         - ansible_virtualization_type == 'docker'
-    - role: trombik.template_role
+    - role: trombik.redhat_repo
+      when:
+        - ansible_os_family == 'RedHat'
+    - role: trombik.sudo
+    - role: trombik.git
+    - role: trombik.bundler
+    - role: trombik.nginx
+    - role: ansible-role-jekyll
   vars:
-    os_template_role_flags:
-      OpenBSD: -4
-      FreeBSD: ""
-      Debian: ""
-      RedHat: ""
+    os_branch:
+      FreeBSD: demo
+      OpenBSD: demo_bundler_1_2
+      Debian: demo_bundler_1_2
+      RedHat: demo_bundler_1_2
 
-    # on RedHat, non-default port is not allowed to listen on
-    # on FreeBSD, sshd from the base and one from the package are both running
-    os_ports:
-      OpenBSD: [22, 10022]
-      FreeBSD: [10022]
-      Debian: [22, 10022]
-      RedHat: [22]
-    template_role_flags: "{{ os_template_role_flags[ansible_os_family] }}"
-    template_role_extra_groups:
-      - bin
-    template_role_config: |
-      UseDNS no
-      {% for p in os_ports[ansible_os_family] %}
-      Port {{ p }}
-      {% endfor %}
+    os_jekyll_extra_packages:
+      FreeBSD: []
+      OpenBSD: []
+      Debian:
+        - ruby-dev
+        - openssl
+        - libssl-dev
+      RedHat:
+        - gcc-c++
+        - ruby-devel
+        - openssl
+
+    jekyll_extra_packages: "{{ os_jekyll_extra_packages[ansible_os_family] }}"
+    jekyll_user: vagrant
+    jekyll_repositories:
+      - name: demo
+        module: git
+        config:
+          repo: https://github.com/trombik/startbootstrap-coming-soon.git
+          dest: /home/vagrant/demo
+          version: "{{ os_branch[ansible_os_family] }}"
+
+    www_root_dir: /home/vagrant/demo/_site
+    nginx_flags: -q
+    nginx_config: |
+      {% if ansible_os_family == 'Debian' or ansible_os_family == 'RedHat' %}
+      user {{ nginx_user }};
+      pid /run/nginx.pid;
+      {% endif %}
+      worker_processes 1;
+      error_log {{ nginx_error_log_file }};
+      events {
+        worker_connections 1024;
+      }
+      http {
+        include {{ nginx_conf_dir }}/mime.types;
+        access_log {{ nginx_access_log_file }};
+        default_type application/octet-stream;
+        sendfile on;
+        keepalive_timeout 65;
+        server {
+          listen 80;
+          server_name localhost;
+          root {{ www_root_dir }};
+          location / {
+            index index.html;
+          }
+        }
+      }
+    nginx_config_fragments: []
+    nginx_extra_packages_by_os:
+      FreeBSD: []
+      OpenBSD: []
+      Debian:
+        - nginx-extras
+      RedHat: []
+    nginx_extra_packages: "{{ nginx_extra_packages_by_os[ansible_os_family] }}"
+
+    redhat_repo_extra_packages:
+      - epel-release
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
+
+    sudo_sudoer: |
+      root ALL=(ALL) ALL
+      #includedir {{ sudo_confd_dir }}
+    sudo_configs:
+      - name: vagrant
+        content: |
+          Defaults:vagrant !requiretty
+          vagrant ALL=(ALL) NOPASSWD: ALL
+          root ALL=(ALL) NOPASSWD: ALL
