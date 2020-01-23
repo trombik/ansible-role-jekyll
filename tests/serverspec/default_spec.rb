@@ -13,10 +13,9 @@ when "openbsd"
 end
 
 repos.each do |r|
-  if os[:family] == "redhat"
-    set :path, '$PATH:~/bin'
-  end
-  describe command("(cd #{r[:path]} && #{bundle_bin} exec jekyll --help)") do
+  describe command("(env && cd #{r[:path]} && #{bundle_bin} exec jekyll --help)") do
+    let(:disable_sudo) { true }
+    let(:path) { "$PATH:$HOME/bin" }
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match(/^jekyll\s\d+\.\d+\.\d+\s/) }
     its(:stderr) { should eq "" }
