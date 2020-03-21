@@ -45,11 +45,14 @@
 - name: Update gems
   bundler:
     chdir: "{{ item.config.dest }}"
-
-    # XXX should be configurable
-    deployment_mode: no
-    executable: "{{ jekyll_bundler_bin }}"
-    user_install: yes
+    deployment_mode: "{{ item.bundler.deployment_mode | default(omit) }}"
+    executable: "{{ jekyll_bundler_bin | default(omit) }}"
+    user_install: "{{ item.bundler.user_install | default(omit) }}"
+    extra_args: "{{ item.bundler.extra_args | default(omit) }}"
+    gem_path: "{{ item.bundler.gem_path | default(omit) }}"
+    gemfile: "{{ item.bundler.gemfile | default(omit) }}"
+    local: "{{ item.bundler.local | default(omit) }}"
+    binstub_directory: "{{ item.bundler.binstub_directory | default(omit) }}"
     state: present
   with_items: "{{ jekyll_repositories }}"
   become: yes

@@ -28,6 +28,7 @@ This is a list of dict. Each element of the list describes a site.
 | `name` | Name of the site | No |
 | `module` | `ansible` module name to checkout the site (currently, only `git` is supported) | Yes |
 | `config` | Passed to  the `ansible` module | Yes |
+| `bundler` | a dict of `bundler` module arguments | No |
 
 ```
 jekyll_repositories:
@@ -37,6 +38,9 @@ jekyll_repositories:
       repo: https://github.com/trombik/startbootstrap-coming-soon.git
       dest: /home/vagrant/demo
       version: "{{ os_branch[ansible_os_family] }}"
+    bundler:
+      deployment_mode: yes
+      user_install: yes
 ```
 
 ## Debian
@@ -97,6 +101,21 @@ jekyll_repositories:
       when:
         - ansible_os_family == 'FreeBSD'
   vars:
+    os_language_ruby_package:
+      FreeBSD: "{{ __language_ruby_package }}"
+      # XXX ruby26 for OpenBSD 6.5 does not have bundler
+      OpenBSD: "{% if ansible_distribution_version is version_compare('6.6', '>=') %}ruby%2.6{% else %}ruby%2.5{% endif %}"
+      Debian: "{{ __language_ruby_package }}"
+      RedHat: "{{ __language_ruby_package }}"
+    language_ruby_package: "{{ os_language_ruby_package[ansible_os_family] }}"
+
+    os_bundler_package:
+      FreeBSD: "{{ __bundler_package }}"
+      OpenBSD: "ruby{{ language_ruby_version.short }}-bundler"
+      Debian: "{{ __bundler_package }}"
+      RedHat: "{{ __bundler_package }}"
+    bundler_package: "{{ os_bundler_package[ansible_os_family] }}"
+
     os_branch:
       FreeBSD: demo
       OpenBSD: demo_bundler_1_2
@@ -112,7 +131,6 @@ jekyll_repositories:
         - gcc-c++
         - ruby-devel
     jekyll_extra_packages: "{{ os_jekyll_extra_packages[ansible_os_family] }}"
-
     jekyll_user: vagrant
     os_jekyll_bundler_bin:
       OpenBSD: "bundle{{ language_ruby_version.short }}"
@@ -127,6 +145,10 @@ jekyll_repositories:
           repo: https://github.com/trombik/startbootstrap-coming-soon.git
           dest: /home/vagrant/demo
           version: "{{ os_branch[ansible_os_family] }}"
+        bundler:
+          deployment_mode: no
+          user_install: yes
+          extra_args: ""
 
     redhat_repo_extra_packages:
       - epel-release
