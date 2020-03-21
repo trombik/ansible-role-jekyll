@@ -9,7 +9,11 @@ bundle_bin = "bundle"
 
 case os[:family]
 when "openbsd"
-  bundle_bin = "bundle25"
+  if os[:release].to_f <= 6.5
+    bundle_bin = "bundle25"
+  else
+    bundle_bin = "bundle26"
+  end
 end
 
 repos.each do |r|
