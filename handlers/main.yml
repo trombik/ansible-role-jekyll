@@ -1,7 +1,7 @@
 ---
 
 - name: Rebuild jekyll_repositories
-  command: "{{ jekyll_bundler_bin }} exec jekyll build"
+  command: "{{ item.bundler.executable | default('bundle') }} exec jekyll build"
   args:
     chdir: "{{ item.config.dest }}"
   become: yes

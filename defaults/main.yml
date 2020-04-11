@@ -3,4 +3,3 @@
 jekyll_user: ""
 jekyll_repositories: []
 jekyll_extra_packages: []
-jekyll_bundler_bin: "{{ __jekyll_bundler_bin }}"
