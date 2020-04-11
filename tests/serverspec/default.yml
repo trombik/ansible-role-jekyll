@@ -75,6 +75,10 @@
           deployment_mode: no
           user_install: yes
           extra_args: ""
+      - name: removeme
+        config:
+          dest: /home/vagrant/removeme
+        state: absent
 
     redhat_repo_extra_packages:
       - epel-release

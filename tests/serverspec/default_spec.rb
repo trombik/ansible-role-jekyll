@@ -6,6 +6,7 @@ repos = [
 ]
 user = "vagrant"
 bundle_bin = "bundle"
+removeme_path = "/home/vagrant/removeme"
 
 case os[:family]
 when "openbsd"
@@ -44,4 +45,8 @@ repos.each do |r|
     it { should be_file }
     it { should be_owned_by user }
   end
+end
+
+describe file removeme_path do
+  it { should_not exist }
 end

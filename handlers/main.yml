@@ -11,3 +11,5 @@
     # XXX find out where `~/bin` is set on CentOS
     PATH: "{{ ansible_env.PATH }}{% if ansible_os_family == 'RedHat' %}:~/bin{% endif %}"
   with_items: "{{ jekyll_repositories }}"
+  when:
+    - "('state' in item and item.state == 'present') or (not 'state' in item )"

@@ -35,12 +35,23 @@
     verify_commit: "{{ item.config.verify_commit | default('no') }}"
     version: "{{ item.config.version | default(omit) }}"
   with_items: "{{ jekyll_repositories }}"
-  when: item.module == 'git'
+  when:
+    - "('state' in item and item.state == 'present') or (not 'state' in item )"
+    - item.module == 'git'
   become: yes
   become_user: "{{ jekyll_user }}"
   register: __jekyll_updated
   notify:
     - Rebuild jekyll_repositories
+
+- name: Remove jekyll_repositories
+  with_items: "{{ jekyll_repositories }}"
+  file:
+    path: "{{ item.config.dest }}"
+    state: absent
+  when:
+    - "'state' in item"
+    - item.state == 'absent'
 
 - name: Update gems
   bundler:
@@ -57,3 +68,6 @@
   with_items: "{{ jekyll_repositories }}"
   become: yes
   become_user: "{{ jekyll_user }}"
+  when:
+    - "('state' in item and item.state == 'present') or (not 'state' in item )"
+    - item.module == 'git'
