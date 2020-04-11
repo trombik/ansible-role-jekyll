@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Release 1.1.1
+
+* a2fc58f bugfix: support `update`
+
 ## Release 1.1.0
 
 * 8e31df9 bugfix: fix an error casued by `update`
