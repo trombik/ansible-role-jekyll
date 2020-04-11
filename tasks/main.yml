@@ -37,9 +37,10 @@
     update: "{% if 'update' in item['config'] %}{{ item['config']['update'] }}{% else %}{{ false | default(omit) }}{% endif %}"
     verify_commit: "{{ item.config.verify_commit | default(omit) }}"
     version: "{{ item.config.version | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
   with_items: "{{ jekyll_repositories }}"
   when:
-    - "('state' in item and item.state == 'present') or (not 'state' in item )"
+    - "('state' in item and (item.state == 'present' or item.state == 'latest')) or (not 'state' in item)"
     - item.module == 'git'
   become: yes
   become_user: "{{ jekyll_user }}"
