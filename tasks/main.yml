@@ -77,3 +77,5 @@
   when:
     - "('state' in item and item.state == 'present') or (not 'state' in item )"
     - item.module == 'git'
+  notify:
+    - Rebuild jekyll_repositories
