@@ -27,8 +27,15 @@ This is a list of dict. Each element of the list describes a site.
 |-----|-------------|------------|
 | `name` | Name of the site | No |
 | `module` | `ansible` module name to checkout the site (currently, only `git` is supported) | Yes |
-| `config` | Passed to  the `ansible` module | Yes |
+| `config` | a dict, passed to  the `ansible` module | Yes |
 | `bundler` | a dict of `bundler` module arguments | No |
+| `state` | Either `present` or `absent`, default is `present` | No |
+
+In addition, `config` key must have the following keys:
+
+| Key    | Description                |
+|--------|----------------------------|
+| `dest` | The path to the repository |
 
 ```
 jekyll_repositories:
@@ -149,6 +156,10 @@ jekyll_repositories:
           deployment_mode: no
           user_install: yes
           extra_args: ""
+      - name: removeme
+        config:
+          dest: /home/vagrant/removeme
+        state: absent
 
     redhat_repo_extra_packages:
       - epel-release
