@@ -31,7 +31,10 @@
     ssh_opts: "{{ item.config.ssh_opts | default(omit) }}"
     track_submodules: "{{ item.config.track_submodules | default(omit) }}"
     umask: "{{ item.config.umask | default(omit) }}"
-    update: "{{ item.config['update'] | default(omit) }}"
+
+    # XXX when a key of dict is `registered` word, you need this magic. what
+    # it does is same as other arguments.
+    update: "{% if 'update' in item['config'] %}{{ item['config']['update'] }}{% else %}{{ false | default(omit) }}{% endif %}"
     verify_commit: "{{ item.config.verify_commit | default(omit) }}"
     version: "{{ item.config.version | default(omit) }}"
   with_items: "{{ jekyll_repositories }}"

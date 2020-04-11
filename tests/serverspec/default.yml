@@ -67,6 +67,7 @@
       - name: demo
         module: git
         config:
+          accept_hostkey: yes
           repo: https://github.com/trombik/startbootstrap-coming-soon.git
           dest: /home/vagrant/demo
           version: "{{ os_branch[ansible_os_family] }}"
