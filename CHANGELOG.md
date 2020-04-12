@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Release 1.1.2
+
+* bd7a80d bufix: rebuild when gem is updated
+
 ## Release 1.1.1
 
 * a2fc58f bugfix: support `update`
